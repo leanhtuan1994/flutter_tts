@@ -9,8 +9,13 @@ if(NOT NUGET_EXE)
 	message(FATAL_ERROR "Please install this executable, and run CMake again.")
 endif()
 
-exec_program(${NUGET_EXE}
-    ARGS install "Microsoft.Windows.CppWinRT" -Version 	2.0.210503.1 -ExcludeVersion -OutputDirectory ${CMAKE_BINARY_DIR}/packages)
+execute_process(
+COMMAND ${NUGET_EXE} install "Microsoft.Windows.CppWinRT" -Version 2.0.210503.1 -ExcludeVersion -OutputDirectory "${CMAKE_BINARY_DIR}/packages"
+WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} # 可选：指定工作目录
+RESULT_VARIABLE NUGET_RESULT
+OUTPUT_STRIP_TRAILING_WHITESPACE
+ERROR_QUIET
+)
 ################ NuGet install end ################
 
 # This value is used when generating builds using this plugin, so it must
@@ -28,6 +33,10 @@ target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL)
 target_include_directories(${PLUGIN_NAME} INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin)
+
+if(MSVC)
+    target_compile_options(${PLUGIN_NAME} PRIVATE "/await")
+endif()
 
 # List of absolute paths to libraries that should be bundled with the plugin
 set(flutter_tts_bundled_libraries
